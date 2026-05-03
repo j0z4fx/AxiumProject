@@ -206,7 +206,12 @@ local MODULE_LIST = {
     { name = "Arc.init",       path = "Arc/src/init.lua"       },
     -- Phase 2: Diagnostics
     { name = "Axium.diagnostics", path = "Axium/src/scripts/diagnostics.lua" },
-    -- Phase 3: Veil                 (added when T-008..T-012 complete)
+    -- Phase 3: Veil
+    { name = "Veil.validator",     path = "Veil/src/validator.lua"     },
+    { name = "Veil.signal_filter", path = "Veil/src/signal_filter.lua" },
+    { name = "Veil.gatekeeper",    path = "Veil/src/gatekeeper.lua"    },
+    { name = "Veil.api_wrap",      path = "Veil/src/api_wrap.lua"      },
+    { name = "Veil.init",          path = "Veil/src/init.lua"          },
     -- Phase 4: Axium Core           (added when T-013..T-017 complete)
     -- ... remainder added as tasks complete
 }
