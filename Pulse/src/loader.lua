@@ -1,15 +1,24 @@
 --[[
     Pulse/src/loader.lua
-    Entry point for Axium. Run this file first before any other module.
+    Entry point for Axium. Run ONLY this file in your executor.
+    It reads and loadstrings every module in dependency order.
 
     DEV MODE: Set AxiumDevMode = true below to enable test suites,
     verbose logging, and developer tooling across all modules.
     Set to false for production — dev globals and harness will not exist.
+
+    BASE_PATH: Set to the folder containing AxiumProject on your machine.
+    Files are loaded via readfile(BASE_PATH .. relativePath).
 ]]
 
 -- ============================================================
 -- [[ DEV MODE TOGGLE — flip this before running ]]
 getgenv().AxiumDevMode = true
+
+-- [[ BASE PATH — folder that contains AxiumProject/ ]]
+-- Example: "C:/Users/you/Documents/"  (trailing slash required)
+-- Leave empty string if your executor resolves paths from its workspace root.
+local BASE_PATH = ""
 -- ============================================================
 
 -- Internal log state (private to this file)
@@ -187,29 +196,101 @@ getgenv().AxiumLog = {
 
 -- ── Module loader ─────────────────────────────────────────────────────────────
 
+-- Ordered list of modules to load. Path is relative to BASE_PATH.
+-- Add new entries here as modules are completed, in dependency order.
+local MODULE_LIST = {
+    -- Phase 1: Arc utilities
+    { name = "Arc.math",       path = "AxiumProject/Arc/src/math.lua"       },
+    -- Phase 2: Diagnostics          (added when T-007 complete)
+    -- Phase 3: Veil                 (added when T-008..T-012 complete)
+    -- Phase 4: Axium Core           (added when T-013..T-017 complete)
+    -- ... remainder added as tasks complete
+}
+
+local function loadFile(relativePath)
+    local fullPath = BASE_PATH .. relativePath
+    local ok, source = pcall(readfile, fullPath)
+    if not ok or source == nil then
+        error("readfile failed for: " .. fullPath .. " | " .. tostring(source))
+    end
+    return source
+end
+
+local function execModule(name, relativePath)
+    local AL = getgenv().AxiumLog
+    AL.info("Pulse", "Loader", "exec", "Loading: " .. name)
+
+    local source, compileErr, runOk, runErr
+
+    -- Read file
+    local readOk
+    readOk, source = pcall(loadFile, relativePath)
+    if not readOk then
+        table.insert(_failed, name)
+        AL.error("Pulse", "Loader", "exec", "Read FAILED: " .. name, source)
+        return
+    end
+
+    -- Compile via loadstring
+    local chunk
+    chunk, compileErr = loadstring(source, "@" .. relativePath)
+    if not chunk then
+        table.insert(_failed, name)
+        AL.error("Pulse", "Loader", "exec", "Compile FAILED: " .. name, compileErr)
+        return
+    end
+
+    -- Execute
+    runOk, runErr = pcall(chunk)
+    if not runOk then
+        table.insert(_failed, name)
+        AL.error("Pulse", "Loader", "exec", "Runtime FAILED: " .. name, runErr)
+        return
+    end
+
+    table.insert(_loaded, name)
+    AL.info("Pulse", "Loader", "exec", "OK: " .. name)
+end
+
 getgenv().AxiumLoader = {
 
     --[[
-        Register a module load attempt.
+        Used by individual module files to self-register with the loader.
+        The loader calls this after loadstring executes the file, but modules
+        can also call it directly if loaded out of order during development.
         name   : human-readable module identifier e.g. "Arc.math"
-        initFn : zero-argument function containing the module's init logic
-        If initFn throws, the error is captured and logged at error severity.
+        initFn : optional zero-argument function for any post-load init work
     ]]
     load = function(name, initFn)
         local AL = getgenv().AxiumLog
-        local ok, err = pcall(initFn)
-        if ok then
-            table.insert(_loaded, name)
-            AL.info("Pulse", "Loader", "load", "Module loaded: " .. name)
-        else
-            table.insert(_failed, name)
-            AL.error("Pulse", "Loader", "load", "Module FAILED: " .. name, tostring(err))
+        if initFn then
+            local ok, err = pcall(initFn)
+            if not ok then
+                AL.error("Pulse", "Loader", "load", "initFn FAILED: " .. name, tostring(err))
+                return
+            end
         end
+        AL.info("Pulse", "Loader", "load", "Registered: " .. name)
     end,
 
     --[[
-        Call after all modules have been loaded.
-        Logs a boot summary and copies the full report to clipboard.
+        Runs the full boot sequence: reads and loadstrings every module in
+        MODULE_LIST order, then finalizes with a clipboard report.
+    ]]
+    boot = function()
+        local AL = getgenv().AxiumLog
+        AL.info("Pulse", "Loader", "boot", string.format(
+            "Starting boot — %d modules queued", #MODULE_LIST
+        ))
+        for _, entry in ipairs(MODULE_LIST) do
+            execModule(entry.name, entry.path)
+        end
+        getgenv().AxiumLoader.finalize()
+    end,
+
+    --[[
+        Finalizes the session: logs summary and copies full report to clipboard.
+        Called automatically by boot(), or manually after custom load sequences.
     ]]
     finalize = function()
         local AL = getgenv().AxiumLog
@@ -218,7 +299,7 @@ getgenv().AxiumLoader = {
         ))
         if #_failed > 0 then
             AL.warning("Pulse", "Loader", "finalize",
-                "Failed: " .. table.concat(_failed, ", ")
+                "Failed modules: " .. table.concat(_failed, ", ")
             )
         end
         AL.toClipboard()
@@ -231,8 +312,12 @@ getgenv().AxiumLoader = {
     getFailed = function() return _failed end,
 }
 
--- ── Boot log ──────────────────────────────────────────────────────────────────
+-- ── Boot ──────────────────────────────────────────────────────────────────────
 
 getgenv().AxiumLog.info("Pulse", "Loader", "init", string.format(
-    "Axium loader initialised | DevMode=%s", tostring(getgenv().AxiumDevMode)
+    "Axium loader initialised | DevMode=%s | BasePath=%q",
+    tostring(getgenv().AxiumDevMode), BASE_PATH
 ))
+
+-- Begin loading all modules immediately
+getgenv().AxiumLoader.boot()
