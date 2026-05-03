@@ -7,18 +7,16 @@
     verbose logging, and developer tooling across all modules.
     Set to false for production — dev globals and harness will not exist.
 
-    BASE_PATH: Set to the folder containing AxiumProject on your machine.
-    Files are loaded via readfile(BASE_PATH .. relativePath).
+    Source is fetched via HTTP GET from raw GitHub on every boot.
+    No local file reads. No require. No bundled source.
 ]]
 
 -- ============================================================
 -- [[ DEV MODE TOGGLE — flip this before running ]]
 getgenv().AxiumDevMode = true
 
--- [[ BASE PATH — folder that contains AxiumProject/ ]]
--- Example: "C:/Users/you/Documents/"  (trailing slash required)
--- Leave empty string if your executor resolves paths from its workspace root.
-local BASE_PATH = ""
+-- [[ RAW SOURCE BASE — trailing slash required ]]
+local RAW_BASE = "https://raw.githubusercontent.com/j0z4fx/AxiumProject/master/"
 -- ============================================================
 
 -- Internal log state (private to this file)
@@ -207,27 +205,38 @@ local MODULE_LIST = {
     -- ... remainder added as tasks complete
 }
 
-local function loadFile(relativePath)
-    local fullPath = BASE_PATH .. relativePath
-    local ok, source = pcall(readfile, fullPath)
-    if not ok or source == nil then
-        error("readfile failed for: " .. fullPath .. " | " .. tostring(source))
+-- HTTP GET: tries executor request APIs in order of commonality
+local function httpGet(url)
+    -- Synapse X / KRNL / Fluxus / most modern executors
+    if request then
+        local res = request({ Url = url, Method = "GET" })
+        if res and res.Body then return res.Body end
     end
-    return source
+    -- Alternate namespace (some executors)
+    if http and http.request then
+        local res = http.request({ Url = url, Method = "GET" })
+        if res and res.Body then return res.Body end
+    end
+    -- Roblox game object (works inside Roblox client with HttpService enabled)
+    if game and game.HttpGet then
+        return game:HttpGet(url)
+    end
+    error("No HTTP API found in this executor")
 end
 
 local function execModule(name, relativePath)
-    local AL = getgenv().AxiumLog
-    AL.info("Pulse", "Loader", "exec", "Loading: " .. name)
+    local AL  = getgenv().AxiumLog
+    local url = RAW_BASE .. relativePath
+    AL.info("Pulse", "Loader", "exec", "Fetching: " .. name, url)
 
     local source, compileErr, runOk, runErr
 
-    -- Read file
-    local readOk
-    readOk, source = pcall(loadFile, relativePath)
-    if not readOk then
+    -- Fetch source over HTTP
+    local fetchOk
+    fetchOk, source = pcall(httpGet, url)
+    if not fetchOk or not source or #source == 0 then
         table.insert(_failed, name)
-        AL.error("Pulse", "Loader", "exec", "Read FAILED: " .. name, source)
+        AL.error("Pulse", "Loader", "exec", "Fetch FAILED: " .. name, source)
         return
     end
 
@@ -315,8 +324,8 @@ getgenv().AxiumLoader = {
 -- ── Boot ──────────────────────────────────────────────────────────────────────
 
 getgenv().AxiumLog.info("Pulse", "Loader", "init", string.format(
-    "Axium loader initialised | DevMode=%s | BasePath=%q",
-    tostring(getgenv().AxiumDevMode), BASE_PATH
+    "Axium loader initialised | DevMode=%s | Source=%s",
+    tostring(getgenv().AxiumDevMode), RAW_BASE
 ))
 
 -- Begin loading all modules immediately
