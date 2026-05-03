@@ -198,7 +198,7 @@ getgenv().AxiumLog = {
 -- Add new entries here as modules are completed, in dependency order.
 local MODULE_LIST = {
     -- Phase 1: Arc utilities
-    { name = "Arc.math",       path = "AxiumProject/Arc/src/math.lua"       },
+    { name = "Arc.math",       path = "Arc/src/math.lua"       },
     -- Phase 2: Diagnostics          (added when T-007 complete)
     -- Phase 3: Veil                 (added when T-008..T-012 complete)
     -- Phase 4: Axium Core           (added when T-013..T-017 complete)
