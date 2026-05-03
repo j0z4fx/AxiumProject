@@ -27,15 +27,6 @@ Dependency chain drives order:
 
 ---
 
-## Phase 3 — Veil: Security & Execution Control
-> Must be fully operational before any other module is initialized. All API calls route through Veil.
-
-- [ ] **T-008** `Veil/src/validator.lua` — Input/payload type validation, argument sanitization, origin checks, schema enforcement
-- [ ] **T-009** `Veil/src/signal_filter.lua` — VoltSignal payload validation, origin whitelisting, blocked-signal audit log
-- [ ] **T-010** `Veil/src/gatekeeper.lua` — Permission tier enforcement (internal / dev tools / external harness), access control registry, denied-action audit log
-- [ ] **T-011** `Veil/src/api_wrap.lua` — Wraps every exposed API with Veil enforcement, enforces blocked raw rendering access, optional anti-tamper integrity checks
-- [ ] **T-012** `Veil/src/init.lua` — Assembles Veil, exposes the single Veil public interface, ensures Veil is irremovable once active
-
 ---
 
 ## Phase 4 — Axium Core: Runtime Orchestrator
