@@ -6,6 +6,7 @@ Tasks are moved here from `TASKS.md` only after explicit user confirmation of co
 
 ## Phase 1 — Arc
 
+- [x] **T-007** `Axium/src/scripts/diagnostics.lua` -- Rolling buffer (2000), severity levels, structured entries w/ stack trace, dedup cooldown, clipboard on error/critical, console+overlay hooks, loader log migration, AxiumLog shim. All tests passed.
 - [x] **T-006.5** `Arc/DOCS.md` — Full API reference for all 5 Arc submodules + top-level aliases.
 - [x] **T-006** `Arc/src/init.lua` — Unified Arc namespace, submodule validation, top-level aliases, env.Arc global.
 - [x] **T-005** `Arc/src/signals.lua` — VoltSignal wrappers: new, once, filtered, mapped, debounced, bridge, await, ConnectionGroup.

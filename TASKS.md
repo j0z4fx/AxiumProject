@@ -25,8 +25,6 @@ Dependency chain drives order:
 ## Phase 2 — Diagnostics Core
 > Cross-cutting. Built early so every subsequent module integrates it from the start.
 
-- [ ] **T-007** `Axium/src/scripts/diagnostics.lua` — Rolling log buffer, severity levels (info/warning/error/critical), structured error format (timestamp + subsystem + module + function + stack + message + args), clipboard copy via `setclipboard`, duplicate dedup with cooldown counter, optional console/overlay output hooks
-
 ---
 
 ## Phase 3 — Veil: Security & Execution Control
