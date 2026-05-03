@@ -20,7 +20,6 @@ Dependency chain drives order:
 ## Phase 1 — Arc: Pure Utility Layer
 > No Axium dependencies. Safe to build in isolation. All other modules consume Arc.
 
-- [ ] **T-006.5** Document All of Arc in a DOCS.md file in its subdirectory
 ---
 
 ## Phase 2 — Diagnostics Core
