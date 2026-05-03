@@ -201,6 +201,7 @@ local MODULE_LIST = {
     { name = "Arc.math",       path = "Arc/src/math.lua"       },
     { name = "Arc.utils",      path = "Arc/src/utils.lua"      },
     { name = "Arc.cache",      path = "Arc/src/cache.lua"      },
+    { name = "Arc.transforms", path = "Arc/src/transforms.lua" },
     -- Phase 2: Diagnostics          (added when T-007 complete)
     -- Phase 3: Veil                 (added when T-008..T-012 complete)
     -- Phase 4: Axium Core           (added when T-013..T-017 complete)
