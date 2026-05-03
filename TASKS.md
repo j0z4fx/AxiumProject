@@ -20,7 +20,6 @@ Dependency chain drives order:
 ## Phase 1 — Arc: Pure Utility Layer
 > No Axium dependencies. Safe to build in isolation. All other modules consume Arc.
 
-- [ ] **T-002** `Arc/src/utils.lua` — General utilities: type checking, table ops, string helpers, shallow/deep copy, UUID generation
 - [ ] **T-003** `Arc/src/cache.lua` — Object pool, keyed cache, LRU eviction, TTL support
 - [ ] **T-004** `Arc/src/transforms.lua` — Transform utilities: position, size, anchor, viewport scaling — consumes `math.lua`
 - [ ] **T-005** `Arc/src/signals.lua` — Signal utility wrappers and VoltSignal factory helpers (not VoltSignal itself — Arc-level convenience layer)
